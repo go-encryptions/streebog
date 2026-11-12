@@ -33,7 +33,7 @@ It plugs into `crypto/hmac` and PBKDF2 like any `hash.Hash`: `hmac.New(streebog.
 
 ## Saving the state
 
-Both hashes implement `encoding.BinaryMarshaler`, `encoding.BinaryUnmarshaler`, `encoding.BinaryAppender` and `hash.Cloner`. The state is 261 bytes: a magic that names the digest size (`stb\x02` for 256 bits, `stb\x05` for 512), the chaining value, the bit counter N and the checksum EPSILON, the 64-byte block buffer and the buffered count. `UnmarshalBinary` refuses a state of the wrong length, a foreign magic or the other digest size's, or a buffer that disagrees with its count, and then leaves the receiver unchanged. This is what lets `crypto/hmac` (and so `crypto/pbkdf2`) save the keyed inner and outer states once instead of rehashing the key block on every call.
+Both hashes implement `encoding.BinaryMarshaler`, `encoding.BinaryUnmarshaler`, `encoding.BinaryAppender` and `hash.Cloner`. The state is 261 bytes: a magic that names the digest size (`stb\x02` for 256 bits, `stb\x05` for 512), the chaining value, the bit counter N and the checksum EPSILON, the 64-byte block buffer and the buffered count. `UnmarshalBinary` refuses a state of the wrong length, a foreign magic or the other digest size's, a bit counter that is not a multiple of 512, or a buffer that disagrees with its count, and then leaves the receiver unchanged. This is what lets `crypto/hmac` (and so `crypto/pbkdf2`) save the keyed inner and outer states once instead of rehashing the key block on every call.
 
 ## Not constant-time
 
@@ -53,6 +53,7 @@ Inside, a 512-bit value is eight little-endian 64-bit words; the constants of th
 - The table-driven round (`lps8`) is checked against a direct bytewise implementation of S, P (Tau) and L from the RFC's definitions.
 - `FuzzChunking` cross-checks arbitrary chunkings of a message against the one-shot digests, 256 and 512 bits; CI runs it for 60 seconds, and a seed corpus is in `testdata/fuzz`.
 - Marshalling: a saved state restored after every buffer fill from 0 to 130 bytes goes on exactly like the original (both sizes), HMAC and PBKDF2 give the same bytes with and without the marshalling path, and `FuzzUnmarshalBinary` feeds arbitrary bytes to `UnmarshalBinary` and checks that an accepted state marshals back to the same bytes.
+- HMAC: the HMAC_GOSTR3411_2012_256 and _512 test examples of RFC 7836 Appendix B (section 4.1 defines both as RFC 2104 HMAC over the hash), run through `crypto/hmac` with and without the state-saving path; they are octet strings in this package's byte order, key `00 01 ... 1f` hashed as printed. An oracle independent of this module's own HMAC checks.
 - CI: race detector and a 100 % statement-coverage gate on amd64 and arm64; the same tests under QEMU on big-endian s390x and on riscv64; `govulncheck`.
 
 ## Implementation
