@@ -122,6 +122,8 @@ jobs:
           cache: true
       - name: fuzz FuzzChunking (60s)
         run: go test -run '^FuzzChunking$' -fuzz '^FuzzChunking$' -fuzztime 60s .
+      - name: fuzz FuzzUnmarshalBinary (60s)
+        run: go test -run '^FuzzUnmarshalBinary$' -fuzz '^FuzzUnmarshalBinary$' -fuzztime 60s .
 
   # ---- Known vulnerabilities in the module and the toolchain -----------
   govulncheck:
