@@ -56,7 +56,9 @@ func unhex(s string) []byte {
 
 // rev reverses a byte string: RFC 6986 prints vectors most significant byte
 // first, while the message and digest byte strings of this package (and of
-// Botan, OpenSSL's gost engine, VeraCrypt) have the least significant first.
+// Botan, whose streebog.vec was opened) have the least significant first. That
+// VeraCrypt uses the same order is to be pinned by go-fde/veracrypt's
+// known-answer test.
 func rev(b []byte) []byte {
 	r := make([]byte, len(b))
 	for i, x := range b {
