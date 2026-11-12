@@ -69,7 +69,8 @@ func (d *digest) UnmarshalBinary(b []byte) error {
 		}
 	}
 	buf := b[:BlockSize]
-	if b[BlockSize] >= BlockSize {
+	// N counts whole processed blocks, in bits: a multiple of 512.
+	if b[BlockSize] >= BlockSize || e.n[0]&511 != 0 {
 		return errState
 	}
 	e.nbuf = int(b[BlockSize])

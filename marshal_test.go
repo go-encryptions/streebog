@@ -72,13 +72,15 @@ func TestUnmarshalRefuses(t *testing.T) {
 	good, _ := h.(encoding.BinaryMarshaler).MarshalBinary()
 	mutate := func(f func(b []byte) []byte) []byte { return f(bytes.Clone(good)) }
 	cases := map[string][]byte{
-		"empty":         nil,
-		"short":         good[:len(good)-1],
-		"long":          append(bytes.Clone(good), 0),
-		"foreign magic": mutate(func(b []byte) []byte { b[0] = 'x'; return b }),
-		"dirty padding": mutate(func(b []byte) []byte { b[len(b)-2] = 1; return b }),
-		"count too big": mutate(func(b []byte) []byte { b[len(b)-1] = 64; return b }),
-		"count too low": mutate(func(b []byte) []byte { b[len(b)-1] = 2; return b }),
+		"empty":                   nil,
+		"short":                   good[:len(good)-1],
+		"long":                    append(bytes.Clone(good), 0),
+		"foreign magic":           mutate(func(b []byte) []byte { b[0] = 'x'; return b }),
+		"dirty padding":           mutate(func(b []byte) []byte { b[len(b)-2] = 1; return b }),
+		"count too big":           mutate(func(b []byte) []byte { b[len(b)-1] = 64; return b }),
+		"N not a multiple of 512": mutate(func(b []byte) []byte { b[4+64] = 1; return b }),
+		"N off by one bit":        mutate(func(b []byte) []byte { b[4+64+1] = 0x01; b[4+64] = 0xff; return b }),
+		"count too low":           mutate(func(b []byte) []byte { b[len(b)-1] = 2; return b }),
 	}
 	for name, b := range cases {
 		d := New512()
